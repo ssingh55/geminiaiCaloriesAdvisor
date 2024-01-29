@@ -44,21 +44,26 @@ def click_image_setup(img_file_buffer):
         raise FileNotFoundError("No Picture clicked")
 
     
-## Initialize our streamlit app fromtend
-
+## Initialize our streamlit app frontend
 st.set_page_config(page_title="Calories Advisor App")
-
 st.header("Calories Advisor App")
+
+# Use st.image directly for camera input
 img_file_buffer = st.camera_input("Take a picture")
 
+# Use st.file uploader to upload a file
 uploaded_file = st.file_uploader("Choose an image....", type = ["jpg", "jpeg", "png"])
 image = None
+image_data = None
+
 if uploaded_file is not None:
     image = Image.open(uploaded_file)
     st.image(image, caption="Uploaded Image.", use_column_width=True)
+    image_data = input_image_setup(uploaded_file)
 elif img_file_buffer is not None:
     image = Image.open(img_file_buffer)
     st.image(image, caption = "Uploaded Image.", use_column_width=True)
+    image_data = click_image_setup(img_file_buffer)
 
 submit = st.button("Tell me about the total calories")
 
@@ -76,12 +81,12 @@ You are an expert in nutritionist where you need to see the food items from the 
         other important things required in our diet
         """
 
-if submit:
-    try:
-        image_data = input_image_setup(uploaded_file)
-    except:
-        image_data = click_image_setup(img_file_buffer)
-
+# Check if the button is clicked and image_data is not None
+if submit and image_data is not None:
+    # Execute the following block only if no exception is raised and image_data is not None
     response = get_gemini_response(input_prompt, image_data)
     st.header("The Response is")
     st.write(response)
+elif submit and image_data is None:
+    # Print an error message if no input is provided
+    st.error("No input provided. Upload an image or take a picture.")
