@@ -28,16 +28,37 @@ def input_image_setup(uploaded_file):
     else:
         raise FileNotFoundError("No file uploaded")
     
+def click_image_setup(img_file_buffer):
+    # Check if image has been clicked
+    if img_file_buffer is not None:
+    # To read image file buffer as bytes:
+        bytes_data = img_file_buffer.getvalue()
+        image_parts = [
+                {
+                    "mime_type": img_file_buffer.type, # Get the mime type of the uploaded file
+                    "data": bytes_data
+                }
+            ]
+        return image_parts
+    else:
+        raise FileNotFoundError("No Picture clicked")
+
+    
 ## Initialize our streamlit app fromtend
 
 st.set_page_config(page_title="Calories Advisor App")
 
 st.header("Calories Advisor App")
+img_file_buffer = st.camera_input("Take a picture")
+
 uploaded_file = st.file_uploader("Choose an image....", type = ["jpg", "jpeg", "png"])
-image = ""
+image = None
 if uploaded_file is not None:
     image = Image.open(uploaded_file)
     st.image(image, caption="Uploaded Image.", use_column_width=True)
+elif img_file_buffer is not None:
+    image = Image.open(img_file_buffer)
+    st.image(image, caption = "Uploaded Image.", use_column_width=True)
 
 submit = st.button("Tell me about the total calories")
 
@@ -56,7 +77,11 @@ You are an expert in nutritionist where you need to see the food items from the 
         """
 
 if submit:
-    image_data = input_image_setup(uploaded_file)
+    try:
+        image_data = input_image_setup(uploaded_file)
+    except:
+        image_data = click_image_setup(img_file_buffer)
+
     response = get_gemini_response(input_prompt, image_data)
     st.header("The Response is")
     st.write(response)
